@@ -7,14 +7,11 @@ class ImportUpdate
 
 	def self.viewCSV
 		i=1
-		#FasterCSV.foreach("/home/mercury/Documents/testing.csv", :headers => :first_row) {|array|
-		#proName=array['brand']+ " " + array['product_type']
-		#product = Product.find_by_name(proName) # search for product
-		#puts product
-		#}
-		product=Product.new()
-		product.name = "xxx"
-		puts product
+		FasterCSV.foreach("/home/mercury/Documents/testing.csv", :headers => :first_row) {|row|
+		product_name=row['brand']+ " " + row['product_type']
+		product = Product.find_by_name(product_name) # search for product
+		puts product_name.class
+		}
 	end
 	
 	def self.testing(lol, lolz)
@@ -71,16 +68,11 @@ class ImportUpdate
 		end
     end
 	
-	def self.addProduct(proName, price, description, sku, costPrice, weight, height, countOnHand, variation, optTypes, optPresent, productType, brand, model)
-				puts "test1"
+	def self.addProduct(product_name, price, description, sku, costPrice, weight, height, countOnHand, variation, optTypes, optPresent, productType, brand, model)
 		product = Product.new()
-				puts "test2"
-		product.name=proName
-				puts "test3"
+		product.name=product_name
 		product.available_on = DateTime.now - 1.day
-				puts "test4"
 		product.price = price
-				puts "test5"
 		product.description = description
 		puts "test"
 		product.save
@@ -102,23 +94,23 @@ class ImportUpdate
 	end
 	
 	def self.importFrom(path)
-		FasterCSV.foreach(path, :headers => :first_row) {|array|
-		proName=array['brand']+ " " + array['product_type'] # combine brand and product type to become product name
-		product = Product.find_by_name(proName) # search for product
-		variation=array['variation'].split(',') #split variation into array
-		optTypes=array['option_types'].split(',') #split options types into array
-		optPresent=array['option_presentation'].split(',') #split option presentation into array
+		FasterCSV.foreach(path, :headers => :first_row) {|row|
+		product_name=row['brand']+ " " + row['product_type'] # combine brand and product type to become product name
+		product = Product.find_by_name(product_name) # search for product
+		variation=row['variation'].split(',') #split variation into row
+		optTypes=row['option_types'].split(',') #split options types into row
+		optPresent=row['option_presentation'].split(',') #split option presentation into row
 		
 		if product #check if product exist or not
 			puts "Existing product, searching for variant"
-			if Variant.find_by_sku(array['sku'])
-				updateVariant(array['sku'], array['price'], array['cost'], array['weight'], array['height'],array['count_on_hand'])
+			if Variant.find_by_sku(row['sku'])
+				updateVariant(row['sku'], row['price'], row['cost'], row['weight'], row['height'],row['count_on_hand'])
 			else
-				addVariant(product, array['sku'], array['price'], array['cost'], array['weight'], array['height'],array['count_on_hand'], variation, optTypes, optPresent)
+				addVariant(product, row['sku'], row['price'], row['cost'], row['weight'], row['height'],row['count_on_hand'], variation, optTypes, optPresent)
 			end			
 		else
 			puts "adding new product"
-			addProduct(proName, array['price'], array['description'], array['sku'], array['cost'], array['weight'], array['height'], array['count_on_hand'], array['variation'], optTypes, optPresent, array['product_type'], array['brand'], array['model'])
+			addProduct(product_name, row['price'], row['description'], row['sku'], row['cost'], row['weight'], row['height'], row['count_on_hand'], row['variation'], optTypes, optPresent, row['product_type'], row['brand'], row['model'])
 		end
 
 		}
