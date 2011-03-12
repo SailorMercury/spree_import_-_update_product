@@ -4,16 +4,6 @@ require 'action_controller'
 require 'yaml'
 
 class ImportUpdate
-
-	def self.viewCSV
-		product = Product.find_by_name("KILOMETRIKIA BALL PEN")
-		puts File.exists?("/home/mercury/Projects/becon/public/images/product/testing2.jpg")
-	end
-	
-	def self.testing(lol, lolz)
-		lol=lol+lolz
-		return lol
-	end
 	
 	def self.attach_image(product, image)
 		path = "/home/mercury/Projects/becon/public/images/product/" + image
@@ -25,7 +15,7 @@ class ImportUpdate
 		end
 	end
 	
-	def self.updateVariant(row)
+	def self.update_variant(row)
 		v=Variant.find_by_sku(row['sku'])
 		puts "updating existing variant"
 		v.price=row['price']
@@ -36,7 +26,7 @@ class ImportUpdate
 		v.save
 	end
 	
-	def self.addVariant(product, row, variation, option_types, option_presentation)
+	def self.add_variant(product, row, variation, option_types, option_presentation)
 		puts "adding new variant"
 		v = Variant.create :product => product, :sku => row['sku'], :price => row['price'], :cost_price => row['cost'], :weight => row['weight'], :height => row['height'], :count_on_hand => row['count_on_hand']
 		i=0
@@ -75,7 +65,7 @@ class ImportUpdate
 		end
     end
 	
-	def self.addProduct(product_name, row, variation, option_types, option_presentation)
+	def self.add_product(product_name, row, variation, option_types, option_presentation)
 		product = Product.new()
 		product.name=product_name
 		product.available_on = DateTime.now - 1.day
@@ -88,13 +78,13 @@ class ImportUpdate
         
         attach_image(product, row['image'])
         
-        addVariant(product, row, variation, option_types, option_presentation)
+        add_variant(product, row, variation, option_types, option_presentation)
         
         associate_taxon('Categories', row['product_type'] , product)
         associate_taxon('Brand', row['brand'], product)
 	end
 	
-	def self.importFrom(path)
+	def self.import_from(path)
 		FasterCSV.foreach(path, :headers => :first_row) {|row|
 		product_name=row['brand']+ " " + row['product_type'] # combine brand and product type to become product name
 		product = Product.find_by_name(product_name) # search for product
@@ -106,13 +96,13 @@ class ImportUpdate
 		if product #check if product exist or not
 			puts "Existing product, searching for variant"
 			if Variant.find_by_sku(row['sku'])
-				updateVariant(row)
+				update_variant(row)
 			else
-				addVariant(product, row, variation, option_types, option_presentation)
+				add_variant(product, row, variation, option_types, option_presentation)
 			end			
 		else
 			puts "adding new product"
-			addProduct(product_name, row, variation, option_types, option_presentation)
+			add_product(product_name, row, variation, option_types, option_presentation)
 		end
 
 		}
