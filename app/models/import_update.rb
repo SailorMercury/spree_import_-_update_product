@@ -5,6 +5,7 @@ require 'yaml'
 
 class ImportUpdate
 	
+	#attach image to specific product(argument can be variant as well)
 	def self.attach_image(product, image)
 		path = "/home/mercury/Projects/becon/public/images/product/" + image
 		if File.exists?(path)
@@ -15,6 +16,7 @@ class ImportUpdate
 		end
 	end
 	
+	#update variant variable and save
 	def self.update_variant(row)
 		v=Variant.find_by_sku(row['sku'])
 		puts "updating existing variant"
@@ -26,6 +28,7 @@ class ImportUpdate
 		v.save
 	end
 	
+	#add variant to product
 	def self.add_variant(product, row, variation, option_types, option_presentation)
 		puts "adding new variant"
 		v = Variant.create :product => product, :sku => row['sku'], :price => row['price'], :cost_price => row['cost'], :weight => row['weight'], :height => row['height'], :count_on_hand => row['count_on_hand']
@@ -35,9 +38,11 @@ class ImportUpdate
 			v.option_values << OptionValue.find_or_create_by_name(:name=>variation[i],:presentation=>variation[i], :option_type => option_type)
 			i=i+1
 		end
+		attach_image(v, row['image'])
 		v.save
 	end
 	
+	#associate taxon accordingly for product
 	def self.associate_taxon(taxonomy_name, taxon_name, product)
 		master_taxon = Taxonomy.find_by_name(taxonomy_name)
 		
@@ -65,6 +70,7 @@ class ImportUpdate
 		end
     end
 	
+	#add product to database
 	def self.add_product(product_name, row, variation, option_types, option_presentation)
 		product = Product.new()
 		product.name=product_name
@@ -84,6 +90,7 @@ class ImportUpdate
         associate_taxon('Brand', row['brand'], product)
 	end
 	
+	#import from path
 	def self.import_from(path)
 		FasterCSV.foreach(path, :headers => :first_row) {|row|
 		product_name=row['brand']+ " " + row['product_type'] # combine brand and product type to become product name
